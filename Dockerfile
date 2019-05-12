@@ -4,6 +4,7 @@ WORKDIR /opt
 
 COPY ./microservices /opt/microservices
 COPY ./nginx /opt/nginx
+COPY ./self-signed-nginx /opt/self-signed-nginx
 
 RUN apt-get update
 RUN apt-get install -y \

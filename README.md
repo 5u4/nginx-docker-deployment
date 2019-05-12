@@ -8,7 +8,7 @@ Manage multiple docker applications using nginx reverse proxy in one server.
 
 ```bash
 docker build -t fake-server .
-docker run --privileged -it --name fake-server -p 80:80 -d fake-server
+docker run --privileged -it --name fake-server -p 80:80 -p 443:443 -d fake-server
 ```
 
 An example node microservice and nginx config are copied to `/opt` in the container.
@@ -78,3 +78,28 @@ But you can add lines to `/etc/hosts` to tell browser `fake-server` is in local.
 127.0.0.1	fake-server
 127.0.0.1	status.fake-server
 ```
+
+## Create self signed certificate
+
+1. Create SSL certficate
+
+```bash
+$ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/ssl/private/fake-server.key \
+    -out /etc/ssl/certs/fake-server.crt
+```
+
+2. Create the self signed nginx
+
+```bash
+$ docker rm nginx -f
+$ docker run -it --name nginx -p 80:80 -p 443:443 -d \
+    --network nginx_status \
+    -v /opt/self-signed-nginx/conf.d:/etc/nginx/conf.d \
+    -v /etc/ssl/certs/fake-server.crt:/etc/ssl/certs/fake-server.crt \
+    -v /etc/ssl/private/fake-server.key:/etc/ssl/private/fake-server.key \
+    nginx:alpine
+```
+
+Now all the http requests will be redirect to https.
+To create a verified certificate, see [nginx-certbot](https://github.com/senhungwong/nginx-certbot).
